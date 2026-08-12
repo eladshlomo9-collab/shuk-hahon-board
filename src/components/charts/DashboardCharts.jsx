@@ -38,7 +38,7 @@ export function ChartCard({ title, data, unit = '' }) {
         <div className="space-y-3.5">
           {data.map((d) => (
             <div key={d.label} className="flex items-center gap-3.5">
-              <span className="w-28 shrink-0 truncate text-[14px] text-ink-soft" title={d.label}>
+              <span className="w-24 shrink-0 truncate text-[14px] text-ink-soft sm:w-36 md:w-44" title={d.label}>
                 {d.label}
               </span>
               <div className="h-[26px] flex-1 overflow-hidden rounded-md bg-track">
@@ -87,7 +87,7 @@ export function DonutCard({ title, data }) {
             {data.map((d) => (
               <div key={d.label} className="flex items-center gap-2.5">
                 <span className="h-3 w-3 shrink-0 rounded-[3px]" style={{ background: d.color }} />
-                <span className="flex-1 truncate text-[14px] text-ink-soft">{d.label}</span>
+                <span className="flex-1 truncate text-[14px] text-ink-soft" title={d.label}>{d.label}</span>
                 <span className="num text-[14px] font-bold text-ink">{d.value}</span>
               </div>
             ))}

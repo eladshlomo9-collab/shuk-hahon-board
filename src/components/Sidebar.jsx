@@ -31,6 +31,8 @@ export default function Sidebar({ onMobileClose }) {
   const [confirmDel, setConfirmDel] = useState(null) // { message, onConfirm }
   const [teamAssignTarget, setTeamAssignTarget] = useState(null) // workspace object
   const [teamAssignValue, setTeamAssignValue] = useState('')
+  const [dragBoard, setDragBoard] = useState(null) // { id, fromWs }
+  const [dragOverWs, setDragOverWs] = useState(null)
 
   async function load() {
     if (!currentOrgId) {
@@ -224,6 +226,27 @@ export default function Sidebar({ onMobileClose }) {
     toast({ message: 'הוורקספייס נמחק', type: 'info' })
   }
 
+  // גרירת בורד מוורקספייס לוורקספייס — מוסיף בסוף רשימת היעד
+  async function moveBoardToWorkspace(boardId, fromWs, toWs) {
+    if (!boardId || fromWs === toWs) return
+    const board = (boardsByWs[fromWs] || []).find((b) => b.id === boardId)
+    if (!board) return
+    const position = (boardsByWs[toWs] || []).length
+    setBoardsByWs((prev) => ({
+      ...prev,
+      [fromWs]: (prev[fromWs] || []).filter((b) => b.id !== boardId),
+      [toWs]: [...(prev[toWs] || []), { ...board, workspace_id: toWs, position }],
+    }))
+    setExpanded((p) => ({ ...p, [toWs]: true }))
+    const { error } = await supabase.from('boards').update({ workspace_id: toWs, position }).eq('id', boardId)
+    if (error) {
+      bump() // נכשל בשרת — טוענים מחדש כדי לבטל את השינוי האופטימי
+      toast({ message: 'העברת הבורד נכשלה', type: 'error' })
+      return
+    }
+    toast('הבורד הועבר')
+  }
+
   async function deleteBoard(b) {
     await supabase.from('boards').delete().eq('id', b.id)
     bump()
@@ -337,7 +360,25 @@ export default function Sidebar({ onMobileClose }) {
         )}
 
         {workspaces.map((ws) => (
-          <div key={ws.id} className="mb-1">
+          <div
+            key={ws.id}
+            className={`mb-1 rounded-md transition-colors ${dragOverWs === ws.id ? 'bg-brand-500/10 ring-1 ring-brand-400/40' : ''}`}
+            onDragOver={(e) => {
+              if (!dragBoard) return
+              e.preventDefault()
+              setDragOverWs(ws.id)
+            }}
+            onDragLeave={(e) => {
+              if (e.currentTarget.contains(e.relatedTarget)) return
+              setDragOverWs((p) => (p === ws.id ? null : p))
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              setDragOverWs(null)
+              if (dragBoard) moveBoardToWorkspace(dragBoard.id, dragBoard.fromWs, ws.id)
+              setDragBoard(null)
+            }}
+          >
             <div className="group flex items-center gap-2 rounded-md px-2.5 py-2 hover:bg-white/5">
               <button
                 onClick={() => setExpanded((p) => ({ ...p, [ws.id]: !p[ws.id] }))}
@@ -347,7 +388,7 @@ export default function Sidebar({ onMobileClose }) {
                 ▾
               </button>
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: ws.color }} />
-              <span className="flex-1 truncate text-[14.5px] font-semibold text-sidebar-ink">{ws.name}</span>
+              <span className="flex-1 truncate text-[14.5px] font-semibold text-sidebar-ink" title={ws.name}>{ws.name}</span>
               <button
                 onClick={() => setBoardModal(ws.id)}
                 className="flex h-6 w-6 items-center justify-center rounded text-base text-sidebar-muted opacity-0 transition-all hover:bg-white/10 hover:text-brand-bright group-hover:opacity-100 cursor-pointer"
@@ -370,11 +411,26 @@ export default function Sidebar({ onMobileClose }) {
             {expanded[ws.id] && (
               <div className="mr-3">
                 {(boardsByWs[ws.id] || []).map((b) => (
-                  <div key={b.id} className="group/board relative flex items-center">
+                  <div
+                    key={b.id}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = 'move'
+                      setDragBoard({ id: b.id, fromWs: ws.id })
+                    }}
+                    onDragEnd={() => {
+                      setDragBoard(null)
+                      setDragOverWs(null)
+                    }}
+                    className={`group/board relative flex items-center rounded-md transition-opacity ${
+                      dragBoard?.id === b.id ? 'opacity-40' : ''
+                    }`}
+                    title="ניתן לגרור לוורקספייס אחר"
+                  >
                     <NavLink
                       to={`/board/${b.id}`}
                       className={({ isActive }) =>
-                        `flex flex-1 items-center gap-2.5 rounded-md px-3 py-2 text-[14px] transition-colors duration-150 ${
+                        `flex flex-1 items-center gap-2.5 rounded-md px-3 py-2 text-[14px] transition-colors duration-150 cursor-grab active:cursor-grabbing ${
                           isActive
                             ? 'bg-white/[0.06] text-sidebar-ink font-semibold'
                             : 'text-sidebar-ink font-medium hover:bg-white/5'
@@ -382,7 +438,7 @@ export default function Sidebar({ onMobileClose }) {
                       }
                     >
                       <IconBoard />
-                      <span className="truncate">{b.name}</span>
+                      <span className="truncate" title={b.name}>{b.name}</span>
                     </NavLink>
                     <span className="absolute left-1 opacity-0 transition-opacity group-hover/board:opacity-100">
                       <RowMenu
@@ -398,7 +454,9 @@ export default function Sidebar({ onMobileClose }) {
                   </div>
                 ))}
                 {(boardsByWs[ws.id] || []).length === 0 && (
-                  <p className="px-3 py-2 text-[13px] text-sidebar-muted">אין בורדים</p>
+                  <p className={`px-3 py-2 text-[13px] ${dragOverWs === ws.id ? 'text-brand-bright' : 'text-sidebar-muted'}`}>
+                    {dragOverWs === ws.id ? 'שחרר כאן כדי להעביר' : 'אין בורדים'}
+                  </p>
                 )}
               </div>
             )}

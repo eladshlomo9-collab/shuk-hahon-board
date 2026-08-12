@@ -10,6 +10,7 @@ import BoardMembersModal from '../components/board/BoardMembersModal'
 import BoardToolbar from '../components/board/BoardToolbar'
 import AutomationsModal from '../components/board/AutomationsModal'
 import { exportBoardToExcel } from '../lib/exportBoard'
+import ImportExcelModal from '../components/board/ImportExcelModal'
 import { computeFormula } from '../lib/formula'
 import { runAutomations } from '../lib/automations'
 import { getPersonIds } from '../lib/personIds'
@@ -65,6 +66,7 @@ export default function BoardPage() {
   const [labelCol, setLabelCol] = useState(null)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [panelItemId, setPanelItemId] = useState(null)
   const [dragCol, setDragCol] = useState(null)
   const [dependencies, setDependencies] = useState([])
@@ -619,6 +621,18 @@ export default function BoardPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+          {editable && (
+            <button
+              onClick={() => setImportOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-ink-muted ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink cursor-pointer"
+              title="ייבוא מאקסל"
+            >
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M10 12V3m0 0L6.8 6.2M10 3l3.2 3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={async () => {
               try {
@@ -899,6 +913,22 @@ export default function BoardPage() {
       />
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <ActivityModal open={activityOpen} onClose={() => setActivityOpen(false)} boardId={boardId} />
+      <ImportExcelModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        boardId={boardId}
+        columns={columns}
+        groups={groups}
+        onImported={({ itemCount, newColumns, unmatched }) => {
+          load()
+          logActivity(boardId, 'import', `ייבא/ה ${itemCount} פריטים מאקסל`, user)
+          toast(
+            `יובאו ${itemCount} פריטים${newColumns ? ` + ${newColumns} עמודות חדשות` : ''}${
+              unmatched ? ` (${unmatched} ערכים לא זוהו ולא נשמרו)` : ''
+            }`
+          )
+        }}
+      />
 
       {panelItemId && items.find((i) => i.id === panelItemId) && (
         <ItemPanel
