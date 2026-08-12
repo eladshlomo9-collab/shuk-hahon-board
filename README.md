@@ -1,16 +1,34 @@
-# React + Vite
+# בורד פעילות AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+אפליקציית ניהול בורדים/משימות (בסגנון monday.com) עם מעקב התייעלות AI ארגוני — React + Vite + Supabase + Tailwind, עברית/RTL.
 
-Currently, two official plugins are available:
+- **Repo**: https://github.com/eladshlomo9-collab/shuk-hahon-board
+- **Production**: https://shuk-hahon-board.netlify.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## פיתוח מקומי
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+צריך קובץ `.env` (לא ב-git) עם:
 
-## Expanding the ESLint configuration
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## מבנה
+
+- `src/` — קוד האפליקציה (React)
+- `db/` — סכמת Supabase (`schema.sql`) ומיגרציות נפרדות (`add-*.sql`)
+- `supabase/functions/` — Edge Functions (יצירת משתמש, איפוס סיסמה)
+- `scripts/` — סקריפטי בדיקה/דיבאג מול Supabase (דורשים `.env` + `TEST_EMAIL`/`TEST_PASSWORD`)
+
+## פריסה
+
+```bash
+npm run build
+npx netlify deploy --prod --dir=dist --site 9dec62d1-3676-4f51-8924-a78f6b6c064a
+```
