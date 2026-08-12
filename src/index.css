@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ============================================================
+   שוק ההון בורד — מערכת עיצוב "בורד" (כלי מסחר פיננסי)
+   סיידבר כהה (ink-navy), מותג אמרלד, מספרים כגיבורים (tabular-nums).
+   ============================================================ */
+
+@theme {
+  /* --- טיפוגרפיה: משפחה אחת נקייה --- */
+  --font-sans: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Heebo", system-ui, sans-serif;
+
+  /* --- מותג: אמרלד פיננסי (#0E9E7C) --- */
+  --color-brand-50: #E7F5F0;
+  --color-brand-100: #CBEBE0;
+  --color-brand-200: #9DDAC4;
+  --color-brand-300: #5FCBA8;
+  --color-brand-400: #12A37F;
+  --color-brand-500: #0E9E7C;
+  --color-brand-600: #0C7F64;
+  --color-brand-700: #0A6650;
+  --color-brand-800: #084F3F;
+  --color-brand-900: #063D31;
+  --color-brand-bright: #2FCFA3;
+
+  /* --- צבעי מבטא (קטגוריות בורדים / כלי AI) --- */
+  --color-accent-purple: #7A5AF0;
+  --color-accent-teal: #3E7BD6;
+  --color-accent-pink: #E0568F;
+  --color-accent-green: #0E9E7C;
+  --color-accent-orange: #E0A63C;
+  --color-accent-violet: #8B5CF6;
+
+  /* --- טקסט (פיננסי, ניגודיות גבוהה) --- */
+  --color-ink: #14181F;
+  --color-ink-soft: #48505C;
+  --color-ink-muted: #656E7B;
+
+  /* --- משטחים בהירים --- */
+  --color-canvas: #F6F8F9;
+  --color-surface: #ffffff;
+  --color-surface-2: #F1F3F6;
+  --color-track: #EDF0F3;
+  --color-line: #E6E9EE;
+  --color-line-strong: #D7DCE3;
+  --color-divider: #EEF0F4;
+
+  /* --- סרגל צד כהה (ink-navy) --- */
+  --color-sidebar: #0F1520;
+  --color-sidebar-2: #1A2130;
+  --color-sidebar-ink: #E7EAF0;
+  --color-sidebar-muted: #7A8494;
+  --color-sidebar-idle: #A7B0BE;
+  --color-sidebar-line: rgba(255, 255, 255, 0.08);
+
+  /* --- סמנטי (סיגנל ירוק/אדום/ענבר) --- */
+  --color-success: #0E9E7C;
+  --color-warning: #E0A63C;
+  --color-warning-tint: #FBEEDD;
+  --color-warning-strong: #A9761B;
+  --color-danger: #DA4A54;
+  --color-danger-tint: #FBE5E7;
+  --color-danger-strong: #B23640;
+
+  /* --- רדיוסים --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 9px;
+  --radius-xl: 13px;
+  --radius-2xl: 18px;
+
+  /* --- צללים רכים (monday) --- */
+  --shadow-xs: 0 1px 2px rgb(50 51 56 / 0.07);
+  --shadow-sm: 0 1px 2px rgb(50 51 56 / 0.06), 0 2px 5px rgb(50 51 56 / 0.07);
+  --shadow-md: 0 4px 10px rgb(50 51 56 / 0.08), 0 10px 24px rgb(50 51 56 / 0.1);
+  --shadow-lg: 0 8px 18px rgb(50 51 56 / 0.1), 0 22px 48px rgb(50 51 56 / 0.16);
+
+  /* --- z-index סמנטי --- */
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+  color-scheme: light;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.003em;
+}
+
+/* כותרות — סאנס הדוק ובולט */
+.font-display {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+
+/* רקע אפליקציה — אפור-בהיר שטוח של monday */
+.app-bg {
+  background-color: var(--color-canvas);
+}
+
+/* טבעת focus עקבית ונגישה */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-900);
+}
+
+/* פס גלילה דק ומעודן */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a9adbf;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* מספרים — tabular-nums לכל KPI/מדד/מספר בטבלה */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
