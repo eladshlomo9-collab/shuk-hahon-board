@@ -6,8 +6,12 @@ const MAX_ROWS = 2000
 export async function parseSpreadsheet(file) {
   const XLSXmod = await import('xlsx')
   const XLSX = XLSXmod.default ?? XLSXmod
-  const buf = await file.arrayBuffer()
-  const wb = XLSX.read(buf, { cellDates: true })
+  // CSV קוראים כטקסט (לא ArrayBuffer) — הדפדפן מזהה UTF-8 נכון גם בלי BOM;
+  // XLSX.read על בייטים גולמיים בלי BOM מנחש קידוד שגוי ומייצר ג'יבריש בעברית.
+  const isCsv = /\.csv$/i.test(file.name) || file.type === 'text/csv'
+  const wb = isCsv
+    ? XLSX.read(await file.text(), { type: 'string', cellDates: true })
+    : XLSX.read(await file.arrayBuffer(), { cellDates: true })
   const sheet = wb.Sheets[wb.SheetNames[0]]
   const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false })
   if (!raw.length) return { headers: [], rows: [], truncated: false }
