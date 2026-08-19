@@ -318,7 +318,7 @@ begin
   end if;
 
   with ai_boards as (
-    select b.id as board_id, b.workspace_id, w.team_id, t.name as team_name, t.ai_work_share,
+    select b.id as board_id, b.name as board_name, b.workspace_id, w.team_id, t.name as team_name, t.ai_work_share,
            bool_or(c.name = 'כלי AI בשימוש') as has_tool,
            bool_or(c.name = 'זמן עם AI (בדקות)') as has_ai_time,
            bool_or(c.name = 'זמן ידני משוער (בדקות)') as has_manual_time
@@ -327,7 +327,7 @@ begin
     left join teams t on t.id = w.team_id
     join columns c on c.board_id = b.id
     where w.org_id = p_org
-    group by b.id, b.workspace_id, w.team_id, t.name, t.ai_work_share
+    group by b.id, b.name, b.workspace_id, w.team_id, t.name, t.ai_work_share
     having bool_or(c.name = 'כלי AI בשימוש')
        and bool_or(c.name = 'זמן עם AI (בדקות)')
        and bool_or(c.name = 'זמן ידני משוער (בדקות)')
@@ -342,6 +342,7 @@ begin
     select
       i.id as item_id,
       ab.board_id,
+      ab.board_name,
       ab.team_id,
       ab.team_name,
       ab.ai_work_share,
@@ -354,7 +355,7 @@ begin
     join cols on cols.board_id = i.board_id
     left join cell_values cv on cv.item_id = i.id and cv.column_id = cols.id
     where i.parent_item_id is null
-    group by i.id, ab.board_id, ab.team_id, ab.team_name, ab.ai_work_share, i.created_at
+    group by i.id, ab.board_id, ab.board_name, ab.team_id, ab.team_name, ab.ai_work_share, i.created_at
   ),
   team_agg as (
     select team_id, team_name, ai_work_share,
@@ -375,6 +376,25 @@ begin
     from item_rows
     where ai_minutes is not null and manual_minutes is not null
     group by to_char(created_at, 'YYYY-MM'), team_id, ai_work_share
+  )
+  board_agg as (
+    select board_id, board_name, team_name, ai_work_share,
+      count(*) as cnt,
+      sum(greatest(manual_minutes - ai_minutes, 0)) as saved_min,
+      sum(manual_minutes) as manual_min
+    from item_rows
+    where ai_minutes is not null and manual_minutes is not null
+    group by board_id, board_name, team_name, ai_work_share
+  ),
+  month_board_agg as (
+    select
+      to_char(created_at, 'YYYY-MM') as month,
+      board_id,
+      sum(greatest(manual_minutes - ai_minutes, 0)) as saved_min,
+      sum(manual_minutes) as manual_min
+    from item_rows
+    where ai_minutes is not null and manual_minutes is not null
+    group by to_char(created_at, 'YYYY-MM'), board_id
   )
   select jsonb_build_object(
     'org_totals', jsonb_build_object(
@@ -438,6 +458,29 @@ begin
         from month_team_agg
         group by month
       ) t
+    ), '[]'::jsonb),
+    'by_board', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'board_id', board_id,
+        'board_name', board_name,
+        'team_name', coalesce(team_name, 'ללא שיוך'),
+        'items_tracked', cnt,
+        'hours_saved', saved_min / 60.0,
+        'efficiency_pct', case when manual_min > 0 then round(saved_min / manual_min * 100, 1) else 0 end,
+        'ai_work_share', ai_work_share,
+        'effective_pct', case when ai_work_share is not null and ai_work_share > 0 and manual_min > 0
+          then round(saved_min / manual_min * 100 * ai_work_share / 100.0, 1) else null end,
+        'monthly_trend', coalesce((
+          select jsonb_agg(jsonb_build_object(
+            'month', mba.month,
+            'hours_saved', mba.saved_min / 60.0,
+            'efficiency_pct', case when mba.manual_min > 0 then round(mba.saved_min / mba.manual_min * 100, 1) else 0 end
+          ) order by mba.month)
+          from month_board_agg mba
+          where mba.board_id = board_agg.board_id
+        ), '[]'::jsonb)
+      ) order by board_name)
+      from board_agg
     ), '[]'::jsonb)
   ) into v_result;
 
