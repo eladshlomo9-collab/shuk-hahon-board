@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import { supabase } from '../lib/supabase'
 import { AI_TOOL_LABELS } from '../lib/constants'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
-import { SecondaryChip, EmptyState, ChartCard, AreaTrendChart } from '../components/charts/DashboardCharts'
+import { SecondaryChip, EmptyState, ChartCard, AreaTrendChart, MonthlyTrendTable } from '../components/charts/DashboardCharts'
 import { pluralize } from '../lib/pluralize'
 import { exportAiOverviewToExcel } from '../lib/exportBoard'
 
@@ -254,7 +254,12 @@ export default function AiOverviewPage() {
           )}
 
           {selectedBoard ? (
-            boardMonthlyTrend.length > 1 && <AreaTrendChart title={`מגמת התייעלות חודשית — ${selectedBoard.board_name}`} data={boardMonthlyTrend} />
+            boardMonthlyTrend.length > 1 && (
+              <>
+                <AreaTrendChart title={`מגמת התייעלות חודשית — ${selectedBoard.board_name}`} data={boardMonthlyTrend} />
+                <MonthlyTrendTable data={boardMonthlyTrend} />
+              </>
+            )
           ) : (
           <>
           {/* התייעלות לפי צוות */}
@@ -296,7 +301,12 @@ export default function AiOverviewPage() {
             <ChartCard title="שעות שנחסכו לפי כלי AI" data={byTool} unit=" ש׳" />
           </div>
 
-          {monthlyTrend.length > 1 && <AreaTrendChart title="מגמת התייעלות חודשית ארגונית" data={monthlyTrend} />}
+          {monthlyTrend.length > 1 && (
+            <>
+              <AreaTrendChart title="מגמת התייעלות חודשית ארגונית" data={monthlyTrend} />
+              <MonthlyTrendTable data={monthlyTrend} />
+            </>
+          )}
           </>
           )}
         </div>

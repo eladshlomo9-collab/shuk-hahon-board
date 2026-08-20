@@ -130,3 +130,39 @@ export function AreaTrendChart({ title, data }) {
     </div>
   )
 }
+
+// טבלת פירוט חודשי — אותן עמודות שמופיעות בייצוא לאקסל (חודש, שעות, התייעלות, אפקטיבית),
+// כדי שהתצוגה בדשבורד תתאים לתצוגה בקובץ המיוצא.
+export function MonthlyTrendTable({ data }) {
+  if (!data.length) return null
+  return (
+    <div className="rounded-2xl bg-surface p-6 ring-1 ring-line">
+      <h3 className="mb-4 text-[16.5px] font-bold text-ink">פירוט חודשי</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[420px] text-right text-[13.5px]">
+          <thead>
+            <tr className="border-b border-line text-[12px] font-medium text-ink-muted">
+              <th className="px-3 py-2 font-medium">חודש</th>
+              <th className="px-3 py-2 font-medium">שעות שנחסכו</th>
+              <th className="px-3 py-2 font-medium">התייעלות</th>
+              <th className="px-3 py-2 font-medium">אפקטיבית</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((m) => (
+              <tr key={m.label} className="border-b border-line last:border-0">
+                <td className="px-3 py-3 font-medium text-ink">{m.label}</td>
+                <td className="num px-3 py-3 text-ink-soft">{m.savedHours} ש׳</td>
+                <td className="num px-3 py-3 font-semibold text-brand-600">{m.efficiencyPct}%</td>
+                <td className="num px-3 py-3 font-bold text-ink">{m.effectivePct == null ? '—' : `${m.effectivePct}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.some((m) => m.effectivePct == null) && (
+        <p className="mt-3 text-[12px] text-ink-muted">— בעמודת "אפקטיבית" מציין חודש שעדיין לא הוגדר לו נתח AI.</p>
+      )}
+    </div>
+  )
+}
