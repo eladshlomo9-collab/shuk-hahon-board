@@ -92,7 +92,8 @@ export default function AiOverviewPage() {
       const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('he-IL', { month: 'short', year: '2-digit' })
       const effectivePct =
         selectedBoard.ai_work_share != null ? Math.round(m.efficiency_pct * selectedBoard.ai_work_share) / 100 : null
-      return { label, savedHours: Math.round(m.hours_saved * 10) / 10, efficiencyPct: m.efficiency_pct, effectivePct }
+      const topItems = (m.top_items || []).map((t) => ({ name: t.item_name, hours: t.hours_saved }))
+      return { label, savedHours: Math.round(m.hours_saved * 10) / 10, efficiencyPct: m.efficiency_pct, effectivePct, topItems }
     })
   }, [selectedBoard])
 

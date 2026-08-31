@@ -1,3 +1,5 @@
+import { Fragment, useState } from 'react'
+
 export function SecondaryChip({ label, value, accent = 'var(--color-ink)' }) {
   return (
     <div className="flex items-center justify-between rounded-xl bg-surface px-5 py-4 ring-1 ring-line">
@@ -132,9 +134,23 @@ export function AreaTrendChart({ title, data }) {
 }
 
 // טבלת פירוט חודשי — אותן עמודות שמופיעות בייצוא לאקסל (חודש, שעות, התייעלות, אפקטיבית),
-// כדי שהתצוגה בדשבורד תתאים לתצוגה בקובץ המיוצא.
+// כדי שהתצוגה בדשבורד תתאים לתצוגה בקובץ המיוצא. כשיש topItems (רק בתצוגת בורד
+// מסונן — לא בתצוגה הארגונית) אפשר להרחיב שורת חודש ולראות אילו משימות בודדות
+// תרמו הכי הרבה לחיסכון של אותו חודש.
 export function MonthlyTrendTable({ data }) {
+  const [expanded, setExpanded] = useState(() => new Set())
   if (!data.length) return null
+  const hasTopItems = data.some((m) => m.topItems?.length)
+
+  function toggle(label) {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
+
   return (
     <div className="rounded-2xl bg-surface p-6 ring-1 ring-line">
       <h3 className="mb-4 text-[16.5px] font-bold text-ink">פירוט חודשי</h3>
@@ -142,6 +158,7 @@ export function MonthlyTrendTable({ data }) {
         <table className="w-full min-w-[420px] text-right text-[13.5px]">
           <thead>
             <tr className="border-b border-line text-[12px] font-medium text-ink-muted">
+              {hasTopItems && <th className="w-8 px-3 py-2 font-medium" />}
               <th className="px-3 py-2 font-medium">חודש</th>
               <th className="px-3 py-2 font-medium">שעות שנחסכו</th>
               <th className="px-3 py-2 font-medium">התייעלות</th>
@@ -149,14 +166,43 @@ export function MonthlyTrendTable({ data }) {
             </tr>
           </thead>
           <tbody>
-            {data.map((m) => (
-              <tr key={m.label} className="border-b border-line last:border-0">
-                <td className="px-3 py-3 font-medium text-ink">{m.label}</td>
-                <td className="num px-3 py-3 text-ink-soft">{m.savedHours} ש׳</td>
-                <td className="num px-3 py-3 font-semibold text-brand-600">{m.efficiencyPct}%</td>
-                <td className="num px-3 py-3 font-bold text-ink">{m.effectivePct == null ? '—' : `${m.effectivePct}%`}</td>
-              </tr>
-            ))}
+            {data.map((m) => {
+              const isOpen = expanded.has(m.label)
+              const canExpand = m.topItems?.length > 0
+              return (
+                <Fragment key={m.label}>
+                  <tr
+                    className={`border-b border-line last:border-0 ${canExpand ? 'cursor-pointer hover:bg-surface-2' : ''}`}
+                    onClick={canExpand ? () => toggle(m.label) : undefined}
+                  >
+                    {hasTopItems && (
+                      <td className="px-3 py-3 text-ink-muted">
+                        {canExpand && <span className={`inline-block transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>}
+                      </td>
+                    )}
+                    <td className="px-3 py-3 font-medium text-ink">{m.label}</td>
+                    <td className="num px-3 py-3 text-ink-soft">{m.savedHours} ש׳</td>
+                    <td className="num px-3 py-3 font-semibold text-brand-600">{m.efficiencyPct}%</td>
+                    <td className="num px-3 py-3 font-bold text-ink">{m.effectivePct == null ? '—' : `${m.effectivePct}%`}</td>
+                  </tr>
+                  {isOpen && canExpand && (
+                    <tr className="border-b border-line bg-surface-2 last:border-0">
+                      <td colSpan={hasTopItems ? 5 : 4} className="px-3 py-3">
+                        <div className="text-[12px] font-medium text-ink-muted">המשימות שתרמו הכי הרבה לחיסכון של החודש</div>
+                        <ul className="mt-2 space-y-1.5">
+                          {m.topItems.map((t, i) => (
+                            <li key={i} className="flex items-center justify-between gap-3 text-[13px]">
+                              <span className="truncate text-ink-soft">{t.name}</span>
+                              <span className="num shrink-0 font-semibold text-ink">{t.hours} ש׳</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
         </table>
       </div>
