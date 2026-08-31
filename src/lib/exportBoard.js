@@ -204,6 +204,13 @@ export async function exportAiOverviewToExcel({ orgName, totals, teamTable, mont
       )
       row.getCell(1).font = { bold: true, color: { argb: INK } }
       row.getCell(4).font = { bold: true, color: { argb: m.effectivePct == null ? INK_FAINT : GREEN } }
+      ;(m.topItems || []).forEach((t) => {
+        const itemRow = addRow([`↳ ${t.name}`, hours(t.hours), '', ''], {
+          font: { italic: true, size: 10, color: { argb: INK_SOFT } },
+          fill: i % 2 === 1 ? ROW_ALT : undefined,
+        })
+        itemRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle', indent: 1 }
+      })
     })
     ws.addRow([])
     addRow(

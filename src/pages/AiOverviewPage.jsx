@@ -62,11 +62,13 @@ export default function AiOverviewPage() {
     return summary.monthly_trend.map((m) => {
       const [y, mo] = m.month.split('-')
       const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('he-IL', { month: 'short', year: '2-digit' })
+      const topItems = (m.top_items || []).map((t) => ({ name: t.item_name, hours: t.hours_saved }))
       return {
         label,
         savedHours: Math.round(m.hours_saved * 10) / 10,
         efficiencyPct: m.efficiency_pct,
         effectivePct: m.effective_pct,
+        topItems,
       }
     })
   }, [summary])
