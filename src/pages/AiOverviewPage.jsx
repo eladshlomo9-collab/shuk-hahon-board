@@ -257,9 +257,11 @@ export default function AiOverviewPage() {
           )}
 
           {selectedBoard ? (
-            boardMonthlyTrend.length > 1 && (
+            boardMonthlyTrend.length > 0 && (
               <>
-                <AreaTrendChart title={`מגמת התייעלות חודשית — ${selectedBoard.board_name}`} data={boardMonthlyTrend} />
+                {boardMonthlyTrend.length > 1 && (
+                  <AreaTrendChart title={`מגמת התייעלות חודשית — ${selectedBoard.board_name}`} data={boardMonthlyTrend} />
+                )}
                 <MonthlyTrendTable data={boardMonthlyTrend} />
               </>
             )
@@ -304,9 +306,9 @@ export default function AiOverviewPage() {
             <ChartCard title="שעות שנחסכו לפי כלי AI" data={byTool} unit=" ש׳" />
           </div>
 
-          {monthlyTrend.length > 1 && (
+          {monthlyTrend.length > 0 && (
             <>
-              <AreaTrendChart title="מגמת התייעלות חודשית ארגונית" data={monthlyTrend} />
+              {monthlyTrend.length > 1 && <AreaTrendChart title="מגמת התייעלות חודשית ארגונית" data={monthlyTrend} />}
               <MonthlyTrendTable data={monthlyTrend} />
             </>
           )}
